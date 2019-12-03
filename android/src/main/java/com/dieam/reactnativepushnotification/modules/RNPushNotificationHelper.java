@@ -333,10 +333,14 @@ public class RNPushNotificationHelper {
                     PendingIntent.FLAG_UPDATE_CURRENT);
 
             NotificationManager notificationManager = notificationManager();
-            checkOrCreateChannel(notificationManager, soundUri);
+            checkOrCreateChannel(notificationManager, soundUri, bundle.getString("sound"));
             System.out.println("hereboos "+soundUri);
+            System.out.println("datachan "+bundle.getString("sound"));
 
             notification.setContentIntent(pendingIntent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+                notification.setChannelId(bundle.getString("sound"));
+            }
 
             if (!bundle.containsKey("vibrate") || bundle.getBoolean("vibrate")) {
                 long vibration = bundle.containsKey("vibration") ? (long) bundle.getDouble("vibration") : DEFAULT_VIBRATION;
@@ -393,7 +397,6 @@ public class RNPushNotificationHelper {
                 editor.remove(notificationIdString);
                 commit(editor);
             }
-            notification.setSound(soundUri);
 
             Notification info = notification.build();
             info.defaults |= Notification.DEFAULT_LIGHTS;
@@ -561,7 +564,7 @@ public class RNPushNotificationHelper {
     }
 
     private static boolean channelCreated = false;
-    private void checkOrCreateChannel(NotificationManager manager, Uri soundUri) {
+    private void checkOrCreateChannel(NotificationManager manager, Uri soundUri, String channelName) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             return;
 //        if (channelCreated)
@@ -602,7 +605,7 @@ public class RNPushNotificationHelper {
             }
         }
 
-        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, this.config.getChannelName() != null ? this.config.getChannelName() : "adzan", importance);
+        NotificationChannel channel = new NotificationChannel(channelName, channelName, importance);
 
         channel.setDescription(this.config.getChannelDescription());
         channel.enableLights(true);
@@ -620,6 +623,7 @@ public class RNPushNotificationHelper {
             channel.setSound(null, null);
         }
 
+//        manager.deleteNotificationChannel(NOTIFICATION_CHANNEL_ID);
         manager.createNotificationChannel(channel);
         System.out.println("disini "+channel);
         channelCreated = true;
