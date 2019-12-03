@@ -39,7 +39,7 @@ import static com.dieam.reactnativepushnotification.modules.RNPushNotificationAt
 public class RNPushNotificationHelper {
     public static final String PREFERENCES_KEY = "rn_push_notification";
     private static final long DEFAULT_VIBRATION = 300L;
-    private static final String NOTIFICATION_CHANNEL_ID = "rn-push-notification-channel";
+    private static final String NOTIFICATION_CHANNEL_ID = "adzan";
 
     private Context context;
     private RNPushNotificationConfig config;
@@ -564,8 +564,8 @@ public class RNPushNotificationHelper {
     private void checkOrCreateChannel(NotificationManager manager, Uri soundUri) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             return;
-        if (channelCreated)
-            return;
+//        if (channelCreated)
+//            return;
         if (manager == null)
             return;
 
@@ -602,7 +602,7 @@ public class RNPushNotificationHelper {
             }
         }
 
-        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, this.config.getChannelName() != null ? this.config.getChannelName() : "rn-push-notification-channel", importance);
+        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, this.config.getChannelName() != null ? this.config.getChannelName() : "adzan", importance);
 
         channel.setDescription(this.config.getChannelDescription());
         channel.enableLights(true);
