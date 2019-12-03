@@ -16,6 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.RingtoneManager;
+import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,7 +39,7 @@ import static com.dieam.reactnativepushnotification.modules.RNPushNotificationAt
 public class RNPushNotificationHelper {
     public static final String PREFERENCES_KEY = "rn_push_notification";
     private static final long DEFAULT_VIBRATION = 300L;
-    private static final String NOTIFICATION_CHANNEL_ID = "rn-push-notification-channel-id";
+    private static final String NOTIFICATION_CHANNEL_ID = "rn-push-notification-channel";
 
     private Context context;
     private RNPushNotificationConfig config;
@@ -280,9 +281,11 @@ public class RNPushNotificationHelper {
             bundle.putBoolean("userInteraction", true);
             intent.putExtra("notification", bundle);
 
+            Uri soundUri = null;
             if (!bundle.containsKey("playSound") || bundle.getBoolean("playSound")) {
-                Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                 String soundName = bundle.getString("soundName");
+                System.out.println("soundName "+soundName);
                 if (soundName != null) {
                     if (!"default".equalsIgnoreCase(soundName)) {
 
@@ -293,9 +296,13 @@ public class RNPushNotificationHelper {
                         int resId;
                         if (context.getResources().getIdentifier(soundName, "raw", context.getPackageName()) != 0) {
                             resId = context.getResources().getIdentifier(soundName, "raw", context.getPackageName());
+                            System.out.println("ifsound "+soundName);
+                            System.out.println("ifresid "+resId);
                         } else {
                             soundName = soundName.substring(0, soundName.lastIndexOf('.'));
                             resId = context.getResources().getIdentifier(soundName, "raw", context.getPackageName());
+                            System.out.println("elsesound "+soundName);
+                            System.out.println("elseresid "+resId);
                         }
 
                         soundUri = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
@@ -326,7 +333,8 @@ public class RNPushNotificationHelper {
                     PendingIntent.FLAG_UPDATE_CURRENT);
 
             NotificationManager notificationManager = notificationManager();
-            checkOrCreateChannel(notificationManager);
+            checkOrCreateChannel(notificationManager, soundUri);
+            System.out.println("hereboos "+soundUri);
 
             notification.setContentIntent(pendingIntent);
 
@@ -385,10 +393,12 @@ public class RNPushNotificationHelper {
                 editor.remove(notificationIdString);
                 commit(editor);
             }
+            notification.setSound(soundUri);
 
             Notification info = notification.build();
             info.defaults |= Notification.DEFAULT_LIGHTS;
 
+            System.out.println("notifboos "+info);
             if (bundle.containsKey("tag")) {
                 String tag = bundle.getString("tag");
                 notificationManager.notify(tag, notificationID, info);
@@ -551,7 +561,7 @@ public class RNPushNotificationHelper {
     }
 
     private static boolean channelCreated = false;
-    private void checkOrCreateChannel(NotificationManager manager) {
+    private void checkOrCreateChannel(NotificationManager manager, Uri soundUri) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             return;
         if (channelCreated)
@@ -597,8 +607,21 @@ public class RNPushNotificationHelper {
         channel.setDescription(this.config.getChannelDescription());
         channel.enableLights(true);
         channel.enableVibration(true);
+        System.out.println("soundurini " + soundUri);
+        System.out.println("channelni " + channel);
+        if (soundUri != null) {
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build();
+            channel.setSound(soundUri, audioAttributes);
+            System.out.println("masuk sini " + audioAttributes);
+        } else {
+            channel.setSound(null, null);
+        }
 
         manager.createNotificationChannel(channel);
+        System.out.println("disini "+channel);
         channelCreated = true;
     }
 }
